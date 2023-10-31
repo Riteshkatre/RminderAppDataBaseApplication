@@ -1,17 +1,28 @@
 package com.example.sqldatabaseapplication.Fragment;
 
+
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -32,6 +43,7 @@ import com.example.sqldatabaseapplication.MyDataBaseHelper;
 import com.example.sqldatabaseapplication.MyDataModel;
 import com.example.sqldatabaseapplication.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.timepicker.MaterialTimePicker;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -45,12 +57,13 @@ public class UpcomingFragment extends Fragment {
     RecyclerView rcv;
     FloatingActionButton btnAdd;
 
-   MyDataBaseHelper dbHandler;
-   UpcomingAdapter adapter;
+    MyDataBaseHelper dbHandler;
+    UpcomingAdapter adapter;
     private AlarmReceiver alarmReceiver;
-
-
-
+    AlarmManager alarmManager;
+    PendingIntent pendingIntent;
+    Calendar calendar;
+    MaterialTimePicker timePicker;
 
 
     @Override
@@ -61,13 +74,12 @@ public class UpcomingFragment extends Fragment {
         rcv = view.findViewById(R.id.rcv);
         btnAdd = view.findViewById(R.id.btnAdd);
 
+        createNotificationChannel();
+
         alarmReceiver = new AlarmReceiver();
 
-        dbHandler=new MyDataBaseHelper(requireContext());
+        dbHandler = new MyDataBaseHelper(requireContext());
         ArrayList<MyDataModel> dataList = dbHandler.getAllData();
-
-
-
 
 
         btnAdd.setOnClickListener(new View.OnClickListener() {
@@ -148,9 +160,7 @@ public class UpcomingFragment extends Fragment {
                     }
 
 
-
-
-            });
+                });
                 etDesc.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -169,25 +179,40 @@ public class UpcomingFragment extends Fragment {
                         if (date.isEmpty() || time.isEmpty() || desc.isEmpty()) {
                             Toast.makeText(getContext(), "Please enter all the data..", Toast.LENGTH_SHORT).show();
                             return;
-                        }else{
+                        } else {
+                            /*calendar = Calendar.getInstance();
+                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault());
+                            try {
+                                Date dateTime = sdf.parse(date + " " + time);
+                                calendar.setTime(dateTime);
+                            } catch (ParseException e) {
+                                e.printStackTrace();
+                            }
+                            alarmManager = (AlarmManager) requireContext().getSystemService(Context.ALARM_SERVICE);                            Intent intent=new Intent(getContext(),AlarmReceiver.class);
+                            pendingIntent=PendingIntent.getBroadcast(getContext(),0,intent,0);
+                            if (calendar != null) {
+                                alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+                                Toast.makeText(getContext(), "Alarm set", Toast.LENGTH_SHORT).show();
+                            }*/
 
 
+                            scheduleAlarm(date, time, desc);
 
-                        dbHandler.addNewCourse(date, time, desc);
+                            dbHandler.addNewCourse(date, time, desc);
 
 
-                        // after adding the data we are displaying a toast message.
-                        Toast.makeText(getContext(), "Course has been added.", Toast.LENGTH_SHORT).show();
-                        etDate.setText("");
-                        etTime.setText("");
-                        etDesc.setText("");
+                            // after adding the data we are displaying a toast message.
+                            Toast.makeText(getContext(), "Course has been added.", Toast.LENGTH_SHORT).show();
+                            etDate.setText("");
+                            etTime.setText("");
+                            etDesc.setText("");
                             ArrayList<MyDataModel> newDataList = dbHandler.getAllData();
                             adapter.updateData(newDataList);
-                        dialog.dismiss();}
+                            dialog.dismiss();
+                        }
 
                     }
                 });
-
 
 
                 cancel.setOnClickListener(new View.OnClickListener() {
@@ -197,7 +222,6 @@ public class UpcomingFragment extends Fragment {
 
                     }
                 });
-
 
 
             }
@@ -223,7 +247,6 @@ public class UpcomingFragment extends Fragment {
         return (view);
 
 
-
     }
 
     private void showDeleteConfirmationDialog(int position) {
@@ -231,6 +254,7 @@ public class UpcomingFragment extends Fragment {
         builder.setTitle("Confirm Deletion");
         builder.setMessage("Do you want to delete this reminder?");
         builder.setPositiveButton("Delete", (dialog, which) -> {
+
             ArrayList<MyDataModel> dataList = dbHandler.getAllData();
             // Handle the delete operation
             MyDataModel selectedData = dataList.get(position);
@@ -239,6 +263,7 @@ public class UpcomingFragment extends Fragment {
             adapter.notifyItemRemoved(position);
             adapter.updateData(dataList);
             Toast.makeText(getContext(), "Item deleted", Toast.LENGTH_SHORT).show();
+            cancelAlarm(selectedData.getId());
 
 
         });
@@ -320,6 +345,10 @@ public class UpcomingFragment extends Fragment {
                 String editedDate = etvEditDate.getText().toString();
                 String editedTime = etvEditTime.getText().toString();
                 String editedDescription = etvEditDescription.getText().toString();
+                cancelAlarm(selectedData.getId());
+
+                // Schedule the new alarm with updated data
+                scheduleAlarm(editedDate, editedTime, editedDescription);
 
                 // Update the data in the database
                 MyDataBaseHelper myDatabaseHandler = new MyDataBaseHelper(requireContext());
@@ -347,6 +376,59 @@ public class UpcomingFragment extends Fragment {
         builder.create().show();
     }
 
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "akChannel";
+            String desc = "Channel for Alarm Manager";
+            int imp = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel("androidKnowledge", name, imp);
+            channel.setDescription(desc);
+
+            NotificationManager notificationManager = (NotificationManager) requireContext().getSystemService(Context.NOTIFICATION_SERVICE);
+
+            notificationManager.createNotificationChannel(channel);
+
+        }
+    }
+
+    private void scheduleAlarm(String date, String time, String desc) {
+        // Parse the date and time strings into a Calendar object
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault());
+        try {
+            Date dateTime = sdf.parse(date + " " + time);
+            calendar.setTime(dateTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        // Create an Intent for the AlarmReceiver
+        Intent intent = new Intent(requireContext(), AlarmReceiver.class);
+        intent.putExtra("description", desc);
+
+        // Create a PendingIntent
+        int alarmId = (int) System.currentTimeMillis(); // Unique ID for each alarm
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(requireContext(), alarmId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        // Get the AlarmManager
+        AlarmManager alarmManager = (AlarmManager) requireContext().getSystemService(Context.ALARM_SERVICE);
+
+        // Set the alarm
+        if (alarmManager != null) {
+            alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+        }
+
+        Toast.makeText(requireContext(), "Alarm set", Toast.LENGTH_SHORT).show();
+    }
+    private void cancelAlarm(int alarmId) {
+        Intent intent = new Intent(requireContext(), AlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(requireContext(), alarmId, intent, PendingIntent.FLAG_NO_CREATE);
+        AlarmManager alarmManager = (AlarmManager) requireContext().getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager != null && pendingIntent != null) {
+            alarmManager.cancel(pendingIntent);
+            pendingIntent.cancel();
+        }
+    }
 
 
 
