@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rl"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:background="#293859">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="5dp"
+        android:layout_marginTop="10dp"
+        app:cardCornerRadius="7dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        android:backgroundTint="#E4DEDE"
+        >
+
+    <LinearLayout
+        android:id="@+id/ll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+
+        android:orientation="horizontal">
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchcompact"
+            android:layout_width="283dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="7dp"
+            android:text="System Lock"
+            android:textSize="25dp"
+            android:textStyle="bold" />
+
+
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/imgOpen"
+        android:layout_width="50dp"
+        android:layout_height="35dp"
+        android:layout_marginLeft="310dp"
+        android:layout_marginTop="5dp"
+        android:src="@drawable/baseline_lock_open_24" />
+    </androidx.cardview.widget.CardView>
+
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tablay"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_below="@+id/cv"
+        android:layout_marginTop="15dp"
+        app:tabGravity="fill"
+        app:tabIndicatorColor="#ffd04a"
+        app:tabIndicatorHeight="3dp"
+        android:background="#293859"
+        app:tabMode="fixed"
+        app:tabTextColor="@color/white"
+        >
+
+    </com.google.android.material.tabs.TabLayout>
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewpage2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/tablay">
+
+    </androidx.viewpager2.widget.ViewPager2>
+</RelativeLayout>
+
+
