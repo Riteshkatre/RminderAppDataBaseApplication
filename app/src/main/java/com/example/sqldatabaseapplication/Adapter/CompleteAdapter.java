@@ -1,5 +1,7 @@
 package com.example.sqldatabaseapplication.Adapter;
 
+import android.content.Context;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -7,25 +9,40 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.sqldatabaseapplication.MyDataModel;
 import com.example.sqldatabaseapplication.R;
 
-public class CompleteAdapter extends RecyclerView.Adapter<CompleteAdapter.CompleteViewHolder>{
+import java.util.List;
 
+public class CompleteAdapter extends RecyclerView.Adapter<CompleteAdapter.CompleteViewHolder>{
+    Context context;
+    List<MyDataModel>compeleteMyDataModelList;
+
+    public CompleteAdapter(Context context, List<MyDataModel> compeleteMyDataModelList) {
+        this.context = context;
+        this.compeleteMyDataModelList = compeleteMyDataModelList;
+    }
 
     @NonNull
     @Override
     public CompleteViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return null;
+        LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
+        View view = layoutInflater.inflate(R.layout.completeditem_file ,parent,false);
+        return new CompleteAdapter.CompleteViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull CompleteViewHolder holder, int position) {
+        MyDataModel model=compeleteMyDataModelList.get(position);
+        holder.dateTextView.setText(model.getDate());
+        holder.timeTextView1.setText(model.getTime());
+        holder.descTextView2.setText(model.getDescription());
 
     }
 
     @Override
     public int getItemCount() {
-        return 0;
+        return compeleteMyDataModelList.size();
     }
 
     public class CompleteViewHolder extends RecyclerView.ViewHolder {

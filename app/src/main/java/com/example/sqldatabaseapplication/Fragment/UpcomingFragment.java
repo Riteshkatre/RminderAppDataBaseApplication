@@ -185,21 +185,6 @@ public class UpcomingFragment extends Fragment {
                             Toast.makeText(getContext(), "Please enter all the data..", Toast.LENGTH_SHORT).show();
                             return;
                         } else {
-                            /*calendar = Calendar.getInstance();
-                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault());
-                            try {
-                                Date dateTime = sdf.parse(date + " " + time);
-                                calendar.setTime(dateTime);
-                            } catch (ParseException e) {
-                                e.printStackTrace();
-                            }
-                            alarmManager = (AlarmManager) requireContext().getSystemService(Context.ALARM_SERVICE);                            Intent intent=new Intent(getContext(),AlarmReceiver.class);
-                            pendingIntent=PendingIntent.getBroadcast(getContext(),0,intent,0);
-                            if (calendar != null) {
-                                alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
-                                Toast.makeText(getContext(), "Alarm set", Toast.LENGTH_SHORT).show();
-                            }*/
-
 
                             scheduleAlarm(date, time, desc);
 
@@ -238,13 +223,7 @@ public class UpcomingFragment extends Fragment {
             openEditDialog(selectedData);
         }, position -> {
             showDeleteConfirmationDialog(position);
-            // Handle Delete Click
-//            MyDataModel selectedData = dataList.get(position);
-//            MyDatabaseHandler myDatabaseHandler = new MyDatabaseHandler(requireContext());
-         /*   dbHandler.deleteData(selectedData.getId());
-            dataList.remove(position);
-            adapter.notifyItemRemoved(position);
-            Toast.makeText(getContext(), "Item deleted", Toast.LENGTH_SHORT).show();*/
+
         });
 
         rcv.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -399,7 +378,7 @@ public class UpcomingFragment extends Fragment {
     private void scheduleAlarm(String date, String time, String desc) {
         // Parse the date and time strings into a Calendar object
         Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault());
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
         try {
             Date dateTime = sdf.parse(date + " " + time);
             calendar.setTime(dateTime);
@@ -417,6 +396,7 @@ public class UpcomingFragment extends Fragment {
 
         // Get the AlarmManager
         AlarmManager alarmManager = (AlarmManager) requireContext().getSystemService(Context.ALARM_SERVICE);
+
 
         // Set the alarm
         if (alarmManager != null) {

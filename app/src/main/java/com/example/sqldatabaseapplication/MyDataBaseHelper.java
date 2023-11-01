@@ -19,6 +19,14 @@ public class MyDataBaseHelper extends SQLiteOpenHelper {
     public static final String DATE_COL = "date";
     public static final String TIME_COL = "time";
     public static final String DESCRIPTION_COL = "description";
+
+    //for compeletedTable
+    private static final String TABLE_NAME1 = "myCptReminder";
+    public static final String ID_COL_CPT = "id";
+    public static final String DATE_COL_CPT = "date";
+    public static final String TIME_COL_CPT = "time";
+    public static final String DESCRIPTION_COL_CPT = "description";
+
     public MyDataBaseHelper(@Nullable Context context) {
         super(context,  DB_NAME, null, DB_VERSION);
     }
@@ -32,33 +40,49 @@ public class MyDataBaseHelper extends SQLiteOpenHelper {
                 + DESCRIPTION_COL + " TEXT)";
 
         db.execSQL(query);
+
+        //For compelete table
+
+        String query1 = "CREATE TABLE " + TABLE_NAME1 + " ("
+                + ID_COL_CPT + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + DATE_COL_CPT + " TEXT, "
+                + TIME_COL_CPT + " TEXT, "
+                + DESCRIPTION_COL_CPT + " TEXT)";
+
+        db.execSQL(query1);
     }
 
     public void addNewCourse(String date, String time,String desc) {
 
-        // on below line we are creating a variable for
-        // our sqlite database and calling writable method
-        // as we are writing data in our database.
+
         SQLiteDatabase db = this.getWritableDatabase();
 
-        // on below line we are creating a
-        // variable for content values.
         ContentValues values = new ContentValues();
-
-        // on below line we are passing all values
-        // along with its key and value pair.
         values.put(DATE_COL, date);
         values.put(TIME_COL, time);
         values.put(DESCRIPTION_COL, desc);
 
-        // after adding all values we are passing
-        // content values to our table.
+
         db.insert(TABLE_NAME, null, values);
 
-        // at last we are closing our
-        // database after adding database.
+
         db.close();
     }
+
+    //For Compelete table
+
+    public void addNewCptReminder(String date, String time, String desc) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(DATE_COL_CPT, date);
+        values.put(TIME_COL_CPT, time);
+        values.put(DESCRIPTION_COL_CPT, desc);
+
+        db.insert(TABLE_NAME1, null, values);
+        db.close();
+    }
+
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -104,4 +128,29 @@ public class MyDataBaseHelper extends SQLiteOpenHelper {
         db.delete(TABLE_NAME, ID_COL + " = ?", new String[]{String.valueOf(id)});
         db.close();
     }
+
+
+    public ArrayList<MyDataModel> getAllCompletedData() {
+        ArrayList<MyDataModel> dataList = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME1, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(ID_COL_CPT));
+                @SuppressLint("Range") String date = cursor.getString(cursor.getColumnIndex(DATE_COL_CPT));
+                @SuppressLint("Range") String time = cursor.getString(cursor.getColumnIndex(TIME_COL_CPT));
+                @SuppressLint("Range") String description = cursor.getString(cursor.getColumnIndex(DESCRIPTION_COL_CPT));
+
+                MyDataModel data = new MyDataModel(id, date, time, description);
+                dataList.add(data);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return dataList;
+    }
+
+
+
+
 }

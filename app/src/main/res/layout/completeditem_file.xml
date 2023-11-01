@@ -111,7 +111,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Completed...."
+                    android:text="Completed.. "
                     android:textStyle="bold"
                     android:textColor="@color/black"
                     android:layout_marginLeft="@dimen/_170sdp"/>

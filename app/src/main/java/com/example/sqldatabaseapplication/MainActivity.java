@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.sqldatabaseapplication.Fragment.CompliteFragment;
@@ -36,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
     private static final String SWITCH_STATE_KEY = "biometricSwitchState";
     private boolean isBiometricEnabled = false;
+    private boolean isFingerprintAuthenticated = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +50,10 @@ public class MainActivity extends AppCompatActivity {
         tabLayout = findViewById(R.id.tablay);
         viewPager2 = findViewById(R.id.viewpage2);
         imgOpen = findViewById(R.id.imgOpen);
+
+
+
+
 
         UpcomingFragment upcomingFragment = new UpcomingFragment();
         CompliteFragment compliteFragment = new CompliteFragment();
@@ -73,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
             updateLockImage(isBiometricEnabled);  // Update the lock image
 
             if (isChecked) {
+
                 enableBiometricAuthentication();
             } else {
                 disableBiometricAuthentication();
@@ -81,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (isBiometricEnabled) {
             enableBiometricAuthentication();
+
         }
 
         updateLockImage(isBiometricEnabled);  // Update the lock image when the app starts
@@ -110,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
             promptInfo = new BiometricPrompt.PromptInfo.Builder()
                     .setTitle("Ritesh project")
                     .setDescription("Use Fingerprint To Log In")
+
                     .setDeviceCredentialAllowed(true)
                     .build();
             biometricPrompt.authenticate(promptInfo);
@@ -124,9 +134,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateLockImage(boolean isBiometricEnabled) {
         if (isBiometricEnabled) {
-            imgOpen.setImageResource(R.drawable.baseline_lock_24);
+            imgOpen.setImageResource(R.drawable.lock);
         } else {
-            imgOpen.setImageResource(R.drawable.baseline_lock_open_24);
+            imgOpen.setImageResource(R.drawable.unlock);
         }
     }
 

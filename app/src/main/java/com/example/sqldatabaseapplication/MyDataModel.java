@@ -6,6 +6,12 @@ public class MyDataModel {
     private String time;
     private String description;
 
+    boolean status=false;
+
+    public boolean isStatus() {
+        return status;
+    }
+
     public MyDataModel(int id, String date, String time, String description) {
         this.id = id;
         this.date = date;
