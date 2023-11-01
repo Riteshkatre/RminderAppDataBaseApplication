@@ -23,6 +23,7 @@ import android.os.Bundle;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -64,6 +65,10 @@ public class UpcomingFragment extends Fragment {
     PendingIntent pendingIntent;
     Calendar calendar;
     MaterialTimePicker timePicker;
+
+
+
+
 
 
     @Override
@@ -116,7 +121,7 @@ public class UpcomingFragment extends Fragment {
                                 new DatePickerDialog.OnDateSetListener() {
                                     @Override
                                     public void onDateSet(DatePicker view, int selectedYear, int selectedMonth, int selectedDay) {
-                                        String selectedDate = selectedYear + "/" + (selectedMonth + 1) + "/" + selectedDay;
+                                        String selectedDate = selectedDay + "/" + (selectedMonth + 1) + "/" + selectedYear;
                                         etDate.setText(selectedDate);
                                     }
                                 },
@@ -302,7 +307,7 @@ public class UpcomingFragment extends Fragment {
                         new DatePickerDialog.OnDateSetListener() {
                             @Override
                             public void onDateSet(DatePicker view, int selectedYear, int selectedMonth, int selectedDay) {
-                                String selectedDate = selectedYear + "/" + (selectedMonth + 1) + "/" + selectedDay;
+                                String selectedDate = selectedDay + "/" + (selectedMonth + 1) + "/" + selectedYear;
                                 etvEditDate.setText(selectedDate);
                             }
                         },

@@ -20,17 +20,17 @@ import com.example.sqldatabaseapplication.Fragment.UpcomingFragment;
 public class AlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        MediaPlayer music = MediaPlayer.create(context, R.raw.notification);
+        MediaPlayer music = MediaPlayer.create(context, R.raw.ringtone);
         music.start();
         Intent nextActivity = new Intent(context, UpcomingFragment.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, nextActivity, 0);
-        Uri soundUri = Uri.parse("android.resource://" + context.getPackageName() + "/" + R.raw.notification);
-
+        Uri soundUri = Uri.parse("android.resource://" + context.getPackageName() + "/" + R.raw.ringtone);
+        String description = intent.getStringExtra("description");
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "androidKnowledge")
                 .setSmallIcon(R.drawable.baseline_notifications_active_24)
                 .setContentTitle("Reminder")
-                .setContentText("Its Time to wake up")
+                .setContentText("Its Time to wake up"+" : "+description)
                 .setSound(soundUri)
                 .setAutoCancel(true)
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
