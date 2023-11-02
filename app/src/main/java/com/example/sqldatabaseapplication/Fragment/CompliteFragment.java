@@ -27,6 +27,8 @@ public class CompliteFragment extends Fragment {
 
     SwipeRefreshLayout swipeRefresh;
 
+    MyDataModel dataModel;
+
 
 
 
@@ -37,7 +39,9 @@ public class CompliteFragment extends Fragment {
       View view= inflater.inflate(R.layout.fragment_complite, container, false);
       comRcv=view.findViewById(R.id.comRcv);
       swipeRefresh=view.findViewById(R.id.swipeRefresh);
-      swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+        dbHelper = new MyDataBaseHelper(requireContext());
+
+        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
           @Override
           public void onRefresh() {
               dbHelper = new MyDataBaseHelper(requireContext());
@@ -46,10 +50,12 @@ public class CompliteFragment extends Fragment {
 
 
 
+
               comRcv.setAdapter(completeAdapter);
 
               comRcv.setLayoutManager(new LinearLayoutManager(requireContext()));
               swipeRefresh.setRefreshing(false);
+
 
 
 
@@ -61,7 +67,16 @@ public class CompliteFragment extends Fragment {
 
 
 
+
         return (view);
+
+    }
+
+    public void addItemToCompletedList(MyDataModel myDataModel) {
+
+        dbHelper = new MyDataBaseHelper(requireContext());
+        ArrayList<MyDataModel> completedList = dbHelper.getAllCompletedData();
+        completedList.add(dataModel);
 
     }
 }

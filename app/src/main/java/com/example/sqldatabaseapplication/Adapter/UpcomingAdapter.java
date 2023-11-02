@@ -1,9 +1,12 @@
 package com.example.sqldatabaseapplication.Adapter;
 
+import static java.security.AccessController.getContext;
+
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +17,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.sqldatabaseapplication.Fragment.UpcomingFragment;
 import com.example.sqldatabaseapplication.MyDataBaseHelper;
 import com.example.sqldatabaseapplication.MyDataModel;
 import com.example.sqldatabaseapplication.R;
@@ -82,6 +86,8 @@ public class UpcomingAdapter extends RecyclerView.Adapter<UpcomingAdapter.Upcomi
         holder.btnRead.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+
                 // Create an AlertDialog
                 AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
                 builder.setTitle("Move Task to Completed?");

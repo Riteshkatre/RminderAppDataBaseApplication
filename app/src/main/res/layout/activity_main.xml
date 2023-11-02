@@ -5,6 +5,8 @@
     android:id="@+id/rl"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:clickable="true"
+    android:focusable="true"
     tools:context=".MainActivity"
     android:background="#293859">
 
@@ -46,7 +48,7 @@
             android:layout_height="35dp"
             android:layout_marginLeft="310dp"
             android:layout_marginTop="5dp"
-            android:src="@drawable/unlock" />
+            android:src="@drawable/on" />
     </androidx.cardview.widget.CardView>
 
 

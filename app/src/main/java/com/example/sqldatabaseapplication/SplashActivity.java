@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 
 public class SplashActivity extends AppCompatActivity {
@@ -18,6 +20,10 @@ public class SplashActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_splash);
         ivlogo=findViewById(R.id.ivlogo);
+        Animation vibrateAnimation = AnimationUtils.loadAnimation(this, R.anim.vibrate_animation);
+
+        // Start the animation on your logo
+        ivlogo.startAnimation(vibrateAnimation);
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {

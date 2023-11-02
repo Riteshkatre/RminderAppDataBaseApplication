@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
@@ -22,11 +23,31 @@ public class AlarmReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         MediaPlayer music = MediaPlayer.create(context, R.raw.ringtone);
         music.start();
-        Intent nextActivity = new Intent(context, UpcomingFragment.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, nextActivity, 0);
-        Uri soundUri = Uri.parse("android.resource://" + context.getPackageName() + "/" + R.raw.ringtone);
+
         String description = intent.getStringExtra("description");
+        String date = intent.getStringExtra("date");
+        String time = intent.getStringExtra("time");
+
+
+        Intent nextActivity = new Intent(context, MainActivity.class);
+        nextActivity.putExtra("from","notification");
+        nextActivity.putExtra("description", description);
+        nextActivity.putExtra("date", date);
+        nextActivity.putExtra("time", time);
+        nextActivity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+        context.startActivity(nextActivity);
+
+
+
+
+
+        int notificationId = (int) System.currentTimeMillis(); // Unique ID for each notification
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 1, nextActivity, PendingIntent.FLAG_IMMUTABLE);
+        Uri soundUri = Uri.parse("android.resource://" + context.getPackageName() + "/" + R.raw.ringtone);
+
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "androidKnowledge")
                 .setSmallIcon(R.drawable.baseline_notifications_active_24)
                 .setContentTitle("Reminder")
@@ -47,7 +68,7 @@ public class AlarmReceiver extends BroadcastReceiver {
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        notificationManagerCompat.notify(123, builder.build());
+        notificationManagerCompat.notify(notificationId, builder.build());
 
 
 

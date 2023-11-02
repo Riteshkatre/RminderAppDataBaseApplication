@@ -1,4 +1,22 @@
 package com.example.sqldatabaseapplication;
+import static android.app.PendingIntent.getActivity;
+
+import static androidx.core.content.ContentProviderCompat.requireContext;
+
+
+import android.annotation.SuppressLint;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -11,96 +29,105 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
-import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
-import android.widget.Toast;
-
 import com.example.sqldatabaseapplication.Fragment.CompliteFragment;
 import com.example.sqldatabaseapplication.Fragment.UpcomingFragment;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executor;
 
+
 public class MainActivity extends AppCompatActivity {
-    private BiometricPrompt biometricPrompt;
-    private BiometricPrompt.PromptInfo promptInfo;
-    private SwitchCompat switchCompact;
-    private RelativeLayout rl;
-    private TabLayout tabLayout;
-    private ViewPager2 viewPager2;
-    private ImageView imgOpen;
+
+    BiometricPrompt biometricPrompt;
+    BiometricPrompt.PromptInfo promptInfo;
+    ImageView imgLock;
+    TabLayout tabLayout;
+    ViewPager2 viewPager2;
+    UpcomingFragment upcomingFragment;
+    CompliteFragment completedFragment;
+    SwitchCompat switchLock;
+    RelativeLayout lyt;
     private SharedPreferences sharedPreferences;
     private static final String SWITCH_STATE_KEY = "biometricSwitchState";
     private boolean isBiometricEnabled = false;
-    private boolean isFingerprintAuthenticated = false;
+    private boolean userLoggedIn = false;
+    Intent i;
+    String from, newDate, newTime, newDesc;
+
+    MyDataBaseHelper myDataBaseHelper;
+    private ArrayList<MyDataModel> dataList = new ArrayList<>();
+    int position = 0;
 
 
+
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        rl = findViewById(R.id.rl);
-        switchCompact = findViewById(R.id.switchcompact);
+
+        i = getIntent();
+
+        from = i.getStringExtra("from");
+
+        if (from != null && from.equals("notification")) {
+            newDesc = i.getStringExtra("description");
+            newDate = i.getStringExtra("date");
+            newTime = i.getStringExtra("time");
+            showNotificationDialog(newDesc, newDate, newTime);
+        }
+
+
         tabLayout = findViewById(R.id.tablay);
         viewPager2 = findViewById(R.id.viewpage2);
-        imgOpen = findViewById(R.id.imgOpen);
+        switchLock = findViewById(R.id.switchcompact);
+        lyt = findViewById(R.id.rl);
+        imgLock = findViewById(R.id.imgOpen);
 
+        upcomingFragment = new UpcomingFragment();
+        completedFragment = new CompliteFragment();
 
-
-
-
-        UpcomingFragment upcomingFragment = new UpcomingFragment();
-        CompliteFragment compliteFragment = new CompliteFragment();
-
-        viewPager2.setAdapter(new ViewPagerAdapter(MainActivity.this, upcomingFragment, compliteFragment));
+        viewPager2.setAdapter(new ViewPagerAdapter(MainActivity.this, upcomingFragment, completedFragment));
         new TabLayoutMediator(tabLayout, viewPager2, new TabLayoutMediator.TabConfigurationStrategy() {
             @Override
             public void onConfigureTab(@NonNull TabLayout.Tab tab, int position) {
-                if (position == 0)
+                if (position == 0) {
                     tab.setText("Upcoming");
-                else
-                    tab.setText("Complete");
+                } else if (position == 1) {
+                    tab.setText("Completed");
+                }
             }
         }).attach();
 
         sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
         isBiometricEnabled = sharedPreferences.getBoolean(SWITCH_STATE_KEY, false);
-        switchCompact.setChecked(isBiometricEnabled);
+        switchLock.setChecked(isBiometricEnabled);
 
-        switchCompact.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        switchLock.setOnCheckedChangeListener((buttonView, isChecked) -> {
             isBiometricEnabled = isChecked;
             sharedPreferences.edit().putBoolean(SWITCH_STATE_KEY, isBiometricEnabled).apply();
 
-            updateLockImage(isBiometricEnabled);  // Update the lock image
-
             if (isChecked) {
-
+                imgLock.setImageResource(R.drawable.off);
                 enableBiometricAuthentication();
             } else {
+                imgLock.setImageResource(R.drawable.on);
                 disableBiometricAuthentication();
             }
         });
 
         if (isBiometricEnabled) {
+            lyt.setVisibility(View.GONE);
             enableBiometricAuthentication();
-
         }
-
-        updateLockImage(isBiometricEnabled);  // Update the lock image when the app starts
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (biometricPrompt != null) {
-            biometricPrompt.cancelAuthentication();
-        }
+    private void disableBiometricAuthentication() {
+        Toast.makeText(this, "App Lock Deactivated", Toast.LENGTH_SHORT).show();
     }
 
     private void enableBiometricAuthentication() {
@@ -111,35 +138,75 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                     super.onAuthenticationSucceeded(result);
-                    Toast.makeText(MainActivity.this, "Biometric authentication enabled", Toast.LENGTH_SHORT).show();
-                    rl.setVisibility(View.VISIBLE);
+                    Toast.makeText(MainActivity.this, "App Lock Activated", Toast.LENGTH_SHORT).show();
+                    lyt.setVisibility(View.VISIBLE);
+                    switchLock.setChecked(true);
+                    userLoggedIn = true;
+                    imgLock.setImageResource(R.drawable.off);
+                }
+
+                @Override
+                public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
+                    super.onAuthenticationError(errorCode, errString);
+                    Toast.makeText(MainActivity.this, errString, Toast.LENGTH_SHORT).show();
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    builder.setTitle("Authentication");
+                    builder.setMessage("Authentication is Required. \nDo you want to continue without Security?");
+                    builder.setCancelable(false);
+
+                    builder.setPositiveButton("Unlock", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            lyt.setVisibility(View.GONE);
+                            imgLock.setImageResource(R.drawable.on);
+                            dialogInterface.dismiss();
+                            enableBiometricAuthentication();
+                            lyt.setVisibility(View.VISIBLE);
+                        }
+                    });
+
+                    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            if (!userLoggedIn) {
+                                switchLock.setChecked(true);
+                                finish();
+                            } else {
+                                switchLock.setChecked(false); // Keep the switch in the checked state
+                                lyt.setVisibility(View.VISIBLE);
+                                imgLock.setImageResource(R.drawable.on);
+                                dialogInterface.dismiss();
+                            }
+                        }
+                    });
+
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
                 }
             });
 
             promptInfo = new BiometricPrompt.PromptInfo.Builder()
-                    .setTitle("Ritesh project")
-                    .setDescription("Use Fingerprint To Log In")
-
+                    .setTitle("Unlock Lock Reminder")
+                    .setDescription("Use PIN, PATTERN or PASSWORD to unlock")
                     .setDeviceCredentialAllowed(true)
+                    .setNegativeButtonText(null)
                     .build();
             biometricPrompt.authenticate(promptInfo);
         } else {
-            Toast.makeText(this, "Device doesn't support biometric authentication", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Device Doesn't Support Biometric Authentication", Toast.LENGTH_SHORT).show();
+            switchLock.setChecked(false);
+            imgLock.setImageResource(R.drawable.on);
         }
     }
 
-    private void disableBiometricAuthentication() {
-        Toast.makeText(this, "Biometric authentication disabled", Toast.LENGTH_SHORT).show();
-    }
-
-    private void updateLockImage(boolean isBiometricEnabled) {
-        if (isBiometricEnabled) {
-            imgOpen.setImageResource(R.drawable.lock);
-        } else {
-            imgOpen.setImageResource(R.drawable.unlock);
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (biometricPrompt != null) {
+            biometricPrompt.cancelAuthentication();
         }
     }
-
     public class ViewPagerAdapter extends FragmentStateAdapter {
         public ViewPagerAdapter(@NonNull FragmentActivity fragmentActivity, UpcomingFragment upcomingFragment, CompliteFragment compliteFragment) {
             super(fragmentActivity);
@@ -160,4 +227,51 @@ public class MainActivity extends AppCompatActivity {
             return 2;
         }
     }
+    private void showNotificationDialog(String description, String date, String time) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        View notificationDialogView = getLayoutInflater().inflate(R.layout.notificationchannel, null);
+        builder.setView(notificationDialogView);
+        builder.setTitle("Notification Details");
+
+        TextView tvDescription = notificationDialogView.findViewById(R.id.tvDescription);
+        TextView tvDate = notificationDialogView.findViewById(R.id.tvDate);
+        TextView tvTime = notificationDialogView.findViewById(R.id.tvTime);
+        Button btnOK = notificationDialogView.findViewById(R.id.btnOK);
+        Button btnCancel = notificationDialogView.findViewById(R.id.btnCancel);
+
+        tvDescription.setText(description);
+        tvDate.setText(date);
+        tvTime.setText(time);
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        btnOK.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (dataList != null && position < dataList.size()) {
+                    MyDataModel myDataModel = dataList.get(position);
+
+                    completedFragment.addItemToCompletedList(myDataModel);
+
+                    dataList.remove(position);
+
+                    // Notify the upcoming fragment's adapter that the item has been removed
+//                    upcomingFragment.notifyItemRemoved(position);
+//                    upcomingFragment.notifyItemRangeChanged(position, dataList.size());
+
+                    dialog.dismiss();
+                } else {
+                    Toast.makeText(MainActivity.this, "Data not found", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        btnCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+    }
 }
+
