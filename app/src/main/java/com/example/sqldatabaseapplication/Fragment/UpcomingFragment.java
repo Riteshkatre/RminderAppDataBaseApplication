@@ -14,20 +14,19 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.sqldatabaseapplication.Adapter.UpcomingAdapter;
 import com.example.sqldatabaseapplication.AlarmReceiver;
@@ -51,163 +50,178 @@ public class UpcomingFragment extends Fragment {
     MyDataBaseHelper dbHandler;
     UpcomingAdapter adapter;
     Intent i;
+    int alarmId;
     String from, newDate, newTime, newDesc;
 
     private AlarmReceiver alarmReceiver;
+
+    SwipeRefreshLayout swipeRefresh;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_upcoming, container, false);
         rcv = view.findViewById(R.id.rcv);
         btnAdd = view.findViewById(R.id.btnAdd);
+        swipeRefresh=view.findViewById(R.id.swipeRefresh);
+        alarmId = (int) System.currentTimeMillis(); // Unique ID for each alarm
+
+        createNotificationChannel();
+        alarmReceiver = new AlarmReceiver();
+        dbHandler = new MyDataBaseHelper(requireContext());
+        ArrayList<MyDataModel> dataList = dbHandler.getAllData();
+
+        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshData();
+            }
+        });
 
 
-            createNotificationChannel();
-            alarmReceiver = new AlarmReceiver();
-            dbHandler = new MyDataBaseHelper(requireContext());
-            ArrayList<MyDataModel> dataList = dbHandler.getAllData();
 
 
+        btnAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getContext(), "Button Clicked", Toast.LENGTH_SHORT).show();
+
+                Button cancel, ok;
+                EditText etDate, etTime, etDesc;
 
 
-            btnAdd.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Toast.makeText(getContext(), "Button Clicked", Toast.LENGTH_SHORT).show();
-
-                    Button cancel, ok;
-                    EditText etDate, etTime, etDesc;
-
-
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                    View dialogView = getLayoutInflater().inflate(R.layout.aad_dialogfile, null);
-                    builder.setView(dialogView);
-                    builder.setCancelable(false);
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
+                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                View dialogView = getLayoutInflater().inflate(R.layout.aad_dialogfile, null);
+                builder.setView(dialogView);
+                builder.setCancelable(false);
+                AlertDialog dialog = builder.create();
+                dialog.show();
 
 
-                    ok = dialogView.findViewById(R.id.ok);
-                    cancel = dialogView.findViewById(R.id.cancel);
-                    etDate = dialogView.findViewById(R.id.etDate);
-                    etTime = dialogView.findViewById(R.id.etTime);
-                    etDesc = dialogView.findViewById(R.id.etDesc);
+                ok = dialogView.findViewById(R.id.ok);
+                cancel = dialogView.findViewById(R.id.cancel);
+                etDate = dialogView.findViewById(R.id.etDate);
+                etTime = dialogView.findViewById(R.id.etTime);
+                etDesc = dialogView.findViewById(R.id.etDesc);
 
-                    etDate.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Calendar currentDate = Calendar.getInstance();
-                            int year = currentDate.get(Calendar.YEAR);
-                            int month = currentDate.get(Calendar.MONTH);
-                            int day = currentDate.get(Calendar.DAY_OF_MONTH);
+                etDate.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Calendar currentDate = Calendar.getInstance();
+                        int year = currentDate.get(Calendar.YEAR);
+                        int month = currentDate.get(Calendar.MONTH);
+                        int day = currentDate.get(Calendar.DAY_OF_MONTH);
 
-                            DatePickerDialog datePickerDialog = new DatePickerDialog(getContext(), new DatePickerDialog.OnDateSetListener() {
-                                @Override
-                                public void onDateSet(DatePicker view, int selectedYear, int selectedMonth, int selectedDay) {
-                                    String selectedDate = selectedDay + "/" + (selectedMonth + 1) + "/" + selectedYear;
-                                    etDate.setText(selectedDate);
-                                }
-                            }, year, month, day);
-                            datePickerDialog.getDatePicker().setMinDate(currentDate.getTimeInMillis());
-
-                            datePickerDialog.show();
-                        }
-
-
-                    });
-                    etTime.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            // Get the current time
-                            Calendar currentTime = Calendar.getInstance();
-                            int currentHour = currentTime.get(Calendar.HOUR_OF_DAY);
-                            int currentMinute = currentTime.get(Calendar.MINUTE);
-
-                            // Create a TimePickerDialog
-                            TimePickerDialog timePickerDialog = new TimePickerDialog(getContext(), new TimePickerDialog.OnTimeSetListener() {
-                                @Override
-                                public void onTimeSet(TimePicker view, int selectedHour, int selectedMinute) {
-                                    // Handle the selected time
-                                    String selectedTime = String.format(Locale.getDefault(), "%02d:%02d", selectedHour, selectedMinute);
-                                    etTime.setText(selectedTime);
-                                }
-                            }, currentHour, currentMinute, false);
-
-                            // Show the TimePickerDialog
-                            timePickerDialog.show();
-                        }
-
-
-                    });
-                    etDesc.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-
-
-                        }
-                    });
-                    ok.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-
-                            String date = etDate.getText().toString();
-                            String time = etTime.getText().toString();
-                            String desc = etDesc.getText().toString();
-
-
-                            // validating if the text fields are empty or not.
-                            if (date.isEmpty() || time.isEmpty() || desc.isEmpty()) {
-                                Toast.makeText(getContext(), "Please enter all the data..", Toast.LENGTH_SHORT).show();
-                            } else {
-
-                                scheduleAlarm(date, time, desc);
-
-                                dbHandler.addNewCourse(date, time, desc);
-
-
-                                // after adding the data we are displaying a toast message.
-                                Toast.makeText(getContext(), "Course has been added.", Toast.LENGTH_SHORT).show();
-                                etDate.setText("");
-                                etTime.setText("");
-                                etDesc.setText("");
-                                ArrayList<MyDataModel> newDataList = dbHandler.getAllData();
-                                adapter.updateData(newDataList);
-                                dialog.dismiss();
+                        DatePickerDialog datePickerDialog = new DatePickerDialog(getContext(), new DatePickerDialog.OnDateSetListener() {
+                            @Override
+                            public void onDateSet(DatePicker view, int selectedYear, int selectedMonth, int selectedDay) {
+                                String selectedDate = selectedDay + "/" + (selectedMonth + 1) + "/" + selectedYear;
+                                etDate.setText(selectedDate);
                             }
+                        }, year, month, day);
+                        datePickerDialog.getDatePicker().setMinDate(currentDate.getTimeInMillis());
 
-                        }
-                    });
+                        datePickerDialog.show();
+                    }
 
 
-                    cancel.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
+                });
+                etTime.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        // Get the current time
+                        Calendar currentTime = Calendar.getInstance();
+                        int currentHour = currentTime.get(Calendar.HOUR_OF_DAY);
+                        int currentMinute = currentTime.get(Calendar.MINUTE);
+
+                        // Create a TimePickerDialog
+                        TimePickerDialog timePickerDialog = new TimePickerDialog(getContext(), new TimePickerDialog.OnTimeSetListener() {
+                            @Override
+                            public void onTimeSet(TimePicker view, int selectedHour, int selectedMinute) {
+                                // Handle the selected time
+                                String selectedTime = String.format(Locale.getDefault(), "%02d:%02d", selectedHour, selectedMinute);
+                                etTime.setText(selectedTime);
+                            }
+                        }, currentHour, currentMinute, false);
+
+                        // Show the TimePickerDialog
+                        timePickerDialog.show();
+                    }
+
+
+                });
+                etDesc.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+
+                    }
+                });
+                ok.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                        String date = etDate.getText().toString();
+                        String time = etTime.getText().toString();
+                        String desc = etDesc.getText().toString();
+
+
+                        // validating if the text fields are empty or not.
+                        if (date.isEmpty() || time.isEmpty() || desc.isEmpty()) {
+                            Toast.makeText(getContext(), "Please enter all the data..", Toast.LENGTH_SHORT).show();
+                        } else {
+
+                            scheduleAlarm(date, time, desc);
+
+                            dbHandler.addNewCourse(date, time, desc);
+
+
+                            // after adding the data we are displaying a toast message.
+                            Toast.makeText(getContext(), "Course has been added.", Toast.LENGTH_SHORT).show();
+                            etDate.setText("");
+                            etTime.setText("");
+                            etDesc.setText("");
+                            ArrayList<MyDataModel> newDataList = dbHandler.getAllData();
+                            adapter.updateData(newDataList);
                             dialog.dismiss();
-
                         }
-                    });
+
+                    }
+                });
 
 
-                }
+                cancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
 
-            });
-            adapter = new UpcomingAdapter(dataList, position -> {
-                // Handle Edit Click
-                MyDataModel selectedData = dataList.get(position);
-                openEditDialog(selectedData);
-            }, position -> {
-                showDeleteConfirmationDialog(position);
+                    }
+                });
 
-            });
 
-            rcv.setLayoutManager(new LinearLayoutManager(requireContext()));
-            rcv.setAdapter(adapter);
+            }
+
+        });
+        adapter = new UpcomingAdapter(dataList, position -> {
+            // Handle Edit Click
+            MyDataModel selectedData = dataList.get(position);
+            openEditDialog(selectedData);
+        }, position -> {
+            showDeleteConfirmationDialog(position);
+
+        });
+
+
+        rcv.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rcv.setAdapter(adapter);
         return (view);
 
-        }
+    }
 
-
-
+    private void refreshData() {
+        ArrayList<MyDataModel> newDataList = dbHandler.getAllData();
+        adapter.updateData(newDataList);
+        swipeRefresh.setRefreshing(false);
+    }
 
 
     private void showDeleteConfirmationDialog(int position) {
@@ -219,12 +233,12 @@ public class UpcomingFragment extends Fragment {
             ArrayList<MyDataModel> dataList = dbHandler.getAllData();
             // Handle the delete operation
             MyDataModel selectedData = dataList.get(position);
-            dbHandler.deleteData(selectedData.getId());
+            dbHandler.deleteData(selectedData.getTime());
             dataList.remove(position);
             adapter.notifyItemRemoved(position);
             adapter.updateData(dataList);
             Toast.makeText(getContext(), "Item deleted", Toast.LENGTH_SHORT).show();
-            cancelAlarm(selectedData.getId());
+            cancelAlarm(alarmId);
 
 
         });
@@ -294,7 +308,7 @@ public class UpcomingFragment extends Fragment {
                 String editedDate = etvEditDate.getText().toString();
                 String editedTime = etvEditTime.getText().toString();
                 String editedDescription = etvEditDescription.getText().toString();
-                cancelAlarm(selectedData.getId());
+                cancelAlarm(alarmId);
 
                 // Schedule the new alarm with updated data
                 scheduleAlarm(editedDate, editedTime, editedDescription);
@@ -358,8 +372,7 @@ public class UpcomingFragment extends Fragment {
         intent.putExtra("date", date);
 
         // Create a PendingIntent
-        int alarmId = (int) System.currentTimeMillis(); // Unique ID for each alarm
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(requireContext(), alarmId, intent, PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(requireContext(), alarmId, intent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
         // Get the AlarmManager
         AlarmManager alarmManager = (AlarmManager) requireContext().getSystemService(Context.ALARM_SERVICE);
@@ -376,7 +389,7 @@ public class UpcomingFragment extends Fragment {
 
     private void cancelAlarm(int alarmId) {
         Intent intent = new Intent(requireContext(), AlarmReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(requireContext(), alarmId, intent, PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(requireContext(), alarmId, intent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager alarmManager = (AlarmManager) requireContext().getSystemService(Context.ALARM_SERVICE);
         if (alarmManager != null && pendingIntent != null) {
             alarmManager.cancel(pendingIntent);
@@ -384,9 +397,19 @@ public class UpcomingFragment extends Fragment {
         }
     }
 
+    public void notifyItemRemoved(int position) {
+        ArrayList<MyDataModel> dataList = dbHandler.getAllData();
+        // Handle the delete operation
+        MyDataModel selectedData = dataList.get(position);
+        dbHandler.deleteData(selectedData.getTime());
+        dataList.remove(position);
+        adapter.notifyItemRemoved(position);
+        adapter.updateData(dataList);
+        Toast.makeText(getContext(), "Item deleted", Toast.LENGTH_SHORT).show();
+        cancelAlarm(selectedData.getId());
+    }
+
 // ...
-
-
 
 
 // ...

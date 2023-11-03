@@ -12,8 +12,7 @@ public class MyDataModel {
         return status;
     }
 
-    public MyDataModel(int id, String date, String time, String description) {
-        this.id = id;
+    public MyDataModel(String date, String time, String description) {
         this.date = date;
         this.time = time;
         this.description = description;

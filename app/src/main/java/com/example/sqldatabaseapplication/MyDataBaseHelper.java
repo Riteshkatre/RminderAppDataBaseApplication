@@ -12,47 +12,38 @@ import androidx.annotation.Nullable;
 import java.util.ArrayList;
 
 public class MyDataBaseHelper extends SQLiteOpenHelper {
-    private static final String DB_NAME = "Reminder";
-    private static final int DB_VERSION = 1;
-    private static final String TABLE_NAME = "myReminder";
     public static final String ID_COL = "id";
     public static final String DATE_COL = "date";
     public static final String TIME_COL = "time";
     public static final String DESCRIPTION_COL = "description";
-
-    //for compeletedTable
-    private static final String TABLE_NAME1 = "myCptReminder";
     public static final String ID_COL_CPT = "id";
     public static final String DATE_COL_CPT = "date";
     public static final String TIME_COL_CPT = "time";
     public static final String DESCRIPTION_COL_CPT = "description";
+    private static final String DB_NAME = "Reminder";
+    private static final int DB_VERSION = 1;
+    private static final String TABLE_NAME = "myReminder";
+    //for compeletedTable
+    private static final String TABLE_NAME1 = "myCptReminder";
 
     public MyDataBaseHelper(@Nullable Context context) {
-        super(context,  DB_NAME, null, DB_VERSION);
+        super(context, DB_NAME, null, DB_VERSION);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String query = "CREATE TABLE " + TABLE_NAME + " ("
-                + ID_COL + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + DATE_COL + " TEXT,"
-                + TIME_COL + " TEXT,"
-                + DESCRIPTION_COL + " TEXT)";
+        String query = "CREATE TABLE " + TABLE_NAME + " (" + ID_COL + " INTEGER PRIMARY KEY AUTOINCREMENT, " + DATE_COL + " TEXT," + TIME_COL + " TEXT," + DESCRIPTION_COL + " TEXT)";
 
         db.execSQL(query);
 
         //For compelete table
 
-        String query1 = "CREATE TABLE " + TABLE_NAME1 + " ("
-                + ID_COL_CPT + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + DATE_COL_CPT + " TEXT, "
-                + TIME_COL_CPT + " TEXT, "
-                + DESCRIPTION_COL_CPT + " TEXT)";
+        String query1 = "CREATE TABLE " + TABLE_NAME1 + " (" + ID_COL_CPT + " INTEGER PRIMARY KEY AUTOINCREMENT, " + DATE_COL_CPT + " TEXT, " + TIME_COL_CPT + " TEXT, " + DESCRIPTION_COL_CPT + " TEXT)";
 
         db.execSQL(query1);
     }
 
-    public void addNewCourse(String date, String time,String desc) {
+    public void addNewCourse(String date, String time, String desc) {
 
 
         SQLiteDatabase db = this.getWritableDatabase();
@@ -71,7 +62,7 @@ public class MyDataBaseHelper extends SQLiteOpenHelper {
 
     //For Compelete table
 
-    public void addNewCptReminder(String date, String time, String desc) {
+    public int addNewCptReminder(String date, String time, String desc) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
@@ -81,6 +72,7 @@ public class MyDataBaseHelper extends SQLiteOpenHelper {
 
         db.insert(TABLE_NAME1, null, values);
         db.close();
+        return 0;
     }
 
 
@@ -98,18 +90,20 @@ public class MyDataBaseHelper extends SQLiteOpenHelper {
         if (cursor.moveToFirst()) {
             do {
 
-                @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(ID_COL));
+//                @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(ID_COL));
                 @SuppressLint("Range") String date = cursor.getString(cursor.getColumnIndex(DATE_COL));
                 @SuppressLint("Range") String time = cursor.getString(cursor.getColumnIndex(TIME_COL));
                 @SuppressLint("Range") String description = cursor.getString(cursor.getColumnIndex(DESCRIPTION_COL));
 
-                MyDataModel data = new MyDataModel(id,date, time, description);
+//                MyDataModel data = new MyDataModel(id, date, time, description);
+                MyDataModel data = new MyDataModel(date, time, description);
                 dataList.add(data);
             } while (cursor.moveToNext());
         }
         cursor.close();
         return dataList;
     }
+
     public int updateData(int id, String date, String time, String description) {
         SQLiteDatabase db = this.getWritableDatabase();
 
@@ -118,14 +112,13 @@ public class MyDataBaseHelper extends SQLiteOpenHelper {
         values.put(TIME_COL, time);
         values.put(DESCRIPTION_COL, description);
 
-        return db.update(TABLE_NAME, values, ID_COL + " = ?",
-                new String[]{String.valueOf(id)});
+        return db.update(TABLE_NAME, values, ID_COL + " = ?", new String[]{String.valueOf(id)});
     }
 
 
-    public void deleteData(int id) {
+    public void deleteData(String time) {
         SQLiteDatabase db = this.getWritableDatabase();
-        db.delete(TABLE_NAME, ID_COL + " = ?", new String[]{String.valueOf(id)});
+        db.delete(TABLE_NAME, TIME_COL + " = ?", new String[]{String.valueOf(time)});
         db.close();
     }
 
@@ -137,20 +130,19 @@ public class MyDataBaseHelper extends SQLiteOpenHelper {
 
         if (cursor.moveToFirst()) {
             do {
-                @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(ID_COL_CPT));
+//                @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(ID_COL_CPT));
                 @SuppressLint("Range") String date = cursor.getString(cursor.getColumnIndex(DATE_COL_CPT));
                 @SuppressLint("Range") String time = cursor.getString(cursor.getColumnIndex(TIME_COL_CPT));
                 @SuppressLint("Range") String description = cursor.getString(cursor.getColumnIndex(DESCRIPTION_COL_CPT));
 
-                MyDataModel data = new MyDataModel(id, date, time, description);
+//                MyDataModel data = new MyDataModel(id, date, time, description);
+                MyDataModel data = new MyDataModel(date, time, description);
                 dataList.add(data);
             } while (cursor.moveToNext());
         }
         cursor.close();
         return dataList;
     }
-
-
 
 
 }

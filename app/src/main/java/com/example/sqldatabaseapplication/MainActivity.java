@@ -58,8 +58,9 @@ public class MainActivity extends AppCompatActivity {
     String from, newDate, newTime, newDesc;
 
     MyDataBaseHelper myDataBaseHelper;
-    private ArrayList<MyDataModel> dataList = new ArrayList<>();
+    ArrayList<MyDataModel> dataList = new ArrayList<>();
     int position = 0;
+
 
 
 
@@ -78,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
             newDesc = i.getStringExtra("description");
             newDate = i.getStringExtra("date");
             newTime = i.getStringExtra("time");
+
+
             showNotificationDialog(newDesc, newDate, newTime);
         }
 
@@ -90,6 +93,9 @@ public class MainActivity extends AppCompatActivity {
 
         upcomingFragment = new UpcomingFragment();
         completedFragment = new CompliteFragment();
+
+        myDataBaseHelper = new MyDataBaseHelper(MainActivity.this);
+
 
         viewPager2.setAdapter(new ViewPagerAdapter(MainActivity.this, upcomingFragment, completedFragment));
         new TabLayoutMediator(tabLayout, viewPager2, new TabLayoutMediator.TabConfigurationStrategy() {
@@ -239,30 +245,30 @@ public class MainActivity extends AppCompatActivity {
         Button btnOK = notificationDialogView.findViewById(R.id.btnOK);
         Button btnCancel = notificationDialogView.findViewById(R.id.btnCancel);
 
+
         tvDescription.setText(description);
         tvDate.setText(date);
         tvTime.setText(time);
         AlertDialog dialog = builder.create();
         dialog.show();
+        newDesc = description;
+        newDate = date;
+        newTime = time;
+
+
+
 
         btnOK.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (dataList != null && position < dataList.size()) {
-                    MyDataModel myDataModel = dataList.get(position);
+                myDataBaseHelper.addNewCptReminder(newDate, newTime, newDesc);
+                myDataBaseHelper.deleteData(newTime);
 
-                    completedFragment.addItemToCompletedList(myDataModel);
 
-                    dataList.remove(position);
 
-                    // Notify the upcoming fragment's adapter that the item has been removed
-//                    upcomingFragment.notifyItemRemoved(position);
-//                    upcomingFragment.notifyItemRangeChanged(position, dataList.size());
+                dialog.dismiss();
 
-                    dialog.dismiss();
-                } else {
-                    Toast.makeText(MainActivity.this, "Data not found", Toast.LENGTH_SHORT).show();
-                }
+
             }
         });
 

@@ -95,7 +95,7 @@ public class UpcomingAdapter extends RecyclerView.Adapter<UpcomingAdapter.Upcomi
                 builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        myDataBaseHelper.deleteData(myDataModel.getId());
+                        myDataBaseHelper.deleteData(myDataModel.getTime());
                         myDataBaseHelper.addNewCptReminder(myDataModel.getDate(), myDataModel.getTime(), myDataModel.getDescription());
                         dataList.remove(position);
                         notifyItemRemoved(position);
